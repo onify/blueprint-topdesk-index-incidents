@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1tjlbb1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.4.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.18.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1tjlbb1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.5.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.18.0">
   <bpmn:process id="topdesk-index-incidents" name="Onify Blueprint: Index incidents from TOPdesk" isExecutable="true">
     <bpmn:serviceTask id="getIncidents" name="Get Incidents from TOPdesk">
       <bpmn:extensionElements>
@@ -12,7 +12,7 @@
               </camunda:map>
             </camunda:inputParameter>
             <camunda:inputParameter name="url">
-              <camunda:script scriptFormat="js">next(null, (environment.output.nextUrl ? environment.output.nextUrl : `${environment.output.url}/incidents?pageStart=0&amp;pageSize=10&amp;fields=id,number,request,briefDescription,operator.name,processingStatus.name,entryType.name,category.id,category.name,subcategory.id,subcategory.name,caller.id,caller.dynamicName,caller.email,caller.department,entryType.name,callDate,modificationDate`));
+              <camunda:script scriptFormat="js">next(null, (environment.output.nextUrl ? environment.output.nextUrl : `${environment.output.url}/incidents?pageStart=0&amp;pageSize=1000&amp;fields=id,number,request,briefDescription,operator.name,processingStatus.name,entryType.name,category.id,category.name,subcategory.id,subcategory.name,caller.id,caller.dynamicName,caller.email,caller.department,entryType.name,callDate,modificationDate`));
 
 
 
@@ -26,6 +26,10 @@
         <camunda:inputOutput>
           <camunda:inputParameter name="state">
             <camunda:script scriptFormat="js">next(null, {name: content.name, id: content.id});</camunda:script>
+          </camunda:inputParameter>
+          <camunda:inputParameter name="setItemsCount">
+            <camunda:script scriptFormat="js">environment.output.itemsCount = (environment.output.itemsCount &gt; 0) ? environment.output.itemsCount : 0;
+next();</camunda:script>
           </camunda:inputParameter>
           <camunda:outputParameter name="nextUrl">
             <camunda:script scriptFormat="js">const nextUrl = content.output.headers['x-next-page-url'];
@@ -43,7 +47,7 @@ next(null, nextUrl);</camunda:script>
         </camunda:inputOutput>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0ww803f</bpmn:incoming>
-      <bpmn:incoming>Flow_0765ccd</bpmn:incoming>
+      <bpmn:incoming>Flow_1gv9lqq</bpmn:incoming>
       <bpmn:outgoing>Flow_1frghbb</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:exclusiveGateway id="moreIncidentsGateway" name="More incidents?" default="Flow_0qdtbr4">
@@ -52,27 +56,10 @@ next(null, nextUrl);</camunda:script>
       <bpmn:outgoing>Flow_0qdtbr4</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_0ww803f" name="Yes" sourceRef="moreIncidentsGateway" targetRef="getIncidents">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="js">(environment.output.nextUrl &amp;&amp; environment.output.nextUrl !== undefined ? next(null,false) : next(null,false));</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="js">(environment.output.nextUrl &amp;&amp; environment.output.nextUrl !== undefined ? next(null,true) : next(null,false));</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0ftost3" sourceRef="start" targetRef="getTOPdeskSettings" />
     <bpmn:sequenceFlow id="Flow_0q79mkz" sourceRef="transformTickets" targetRef="bulkIndexIncidents" />
-    <bpmn:serviceTask id="getTOPdeskSettings" name="Get TOPdesk Settings">
-      <bpmn:extensionElements>
-        <camunda:connector>
-          <camunda:inputOutput>
-            <camunda:inputParameter name="url">/my/config/settings</camunda:inputParameter>
-          </camunda:inputOutput>
-          <camunda:connectorId>onifyElevatedApiRequest</camunda:connectorId>
-        </camunda:connector>
-        <camunda:inputOutput>
-          <camunda:outputParameter name="url">${content.output.body._topdesk_kl_url}</camunda:outputParameter>
-          <camunda:outputParameter name="token">${content.output.body._topdesk_kl_token}</camunda:outputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0ftost3</bpmn:incoming>
-      <bpmn:outgoing>Flow_0765ccd</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="Flow_0765ccd" sourceRef="getTOPdeskSettings" targetRef="getIncidents" />
     <bpmn:serviceTask id="bulkIndexIncidents" name="Bulk index incidents">
       <bpmn:extensionElements>
         <camunda:connector>
@@ -92,7 +79,8 @@ next(null, nextUrl);</camunda:script>
             <camunda:script scriptFormat="js">next(null, {
   id: content.id,
   result: {
-    done: true
+    done: true,
+    statusmessage: `Indexed ${environment.output.itemsCount} so far`
   }
 });</camunda:script>
           </camunda:outputParameter>
@@ -144,6 +132,7 @@ environment.output.incidents.forEach(async function(incident) {
       },
       hash: environment.settings.processId
     };
+    environment.output.itemsCount++;
     items.push(item);
 });
 
@@ -159,29 +148,21 @@ next(null, items);</bpmn:script>
             <camunda:script scriptFormat="js">next(null, {
     statuskey: 'complete',
     statuscode: 200,
-    statusmessage: "Indexering av " + environment.output.totalTicketCount + " ärenden har slutförts"
+    statusmessage: `Indexed ${environment.output.itemsCount} incidents`
 
 });</camunda:script>
           </camunda:inputParameter>
-          <camunda:inputParameter name="state">
-            <camunda:script scriptFormat="js">next(null, {
-  id: 'completed',
-  result: {
-    done: true,
-    error: false,
-    skipped: false,
-    timestamp: new Date(),
-    statuscode: 200,
-statusmessage: "Indexering av " + environment.output.totalTicketCount + " ärenden har slutförts"
-}
-});</camunda:script>
+          <camunda:inputParameter name="cleanUp">
+            <camunda:script scriptFormat="js">environment.output.ForIndex = [];
+environment.output.incidents = [];
+next();</camunda:script>
           </camunda:inputParameter>
         </camunda:inputOutput>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0sh0w0z</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1frghbb" sourceRef="getIncidents" targetRef="transformTickets" />
-    <bpmn:sequenceFlow id="Flow_0qdtbr4" name="No" sourceRef="moreIncidentsGateway" targetRef="purgeProducts" />
+    <bpmn:sequenceFlow id="Flow_0qdtbr4" name="No" sourceRef="moreIncidentsGateway" targetRef="Event_0hr9feo" />
     <bpmn:serviceTask id="purgeProducts" name="Purge obsolete incidents">
       <bpmn:extensionElements>
         <camunda:connector>
@@ -206,17 +187,47 @@ statusmessage: "Indexering av " + environment.output.totalTicketCount + " ärend
   id: content.id,
   result: {
     done: true,
-    statusmessage: `Purged ${content.output.body.translation.data.deleted} products`
+    statusmessage: `Purged ${content.output.body.translation.data.deleted} incidents`
   }
 });</camunda:script>
           </camunda:outputParameter>
-          <camunda:outputParameter name="purgedCount">${content.output.body.translation.data.deleted}</camunda:outputParameter>
         </camunda:inputOutput>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0qdtbr4</bpmn:incoming>
+      <bpmn:incoming>Flow_0p75x3h</bpmn:incoming>
       <bpmn:outgoing>Flow_0sh0w0z</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="Flow_0sh0w0z" sourceRef="purgeProducts" targetRef="end" />
+    <bpmn:serviceTask id="getTOPdeskSettings" name="Get TOPdesk Settings">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">/my/config/settings</camunda:inputParameter>
+            <camunda:inputParameter name="method">GET</camunda:inputParameter>
+            <camunda:inputParameter name="query">
+              <camunda:map>
+                <camunda:entry key="tag">topdesk</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>onifyElevatedApiRequest</camunda:connectorId>
+        </camunda:connector>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="url">${content.output.body._topdesk_api_url}</camunda:outputParameter>
+          <camunda:outputParameter name="token">${content.output.body._topdesk_token}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0ftost3</bpmn:incoming>
+      <bpmn:outgoing>Flow_1gv9lqq</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1gv9lqq" sourceRef="getTOPdeskSettings" targetRef="getIncidents" />
+    <bpmn:intermediateCatchEvent id="Event_0hr9feo" name="Wait until indexed (2 seconds)">
+      <bpmn:incoming>Flow_0qdtbr4</bpmn:incoming>
+      <bpmn:outgoing>Flow_0p75x3h</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_04xa0o6">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_0p75x3h" sourceRef="Event_0hr9feo" targetRef="purgeProducts" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="topdesk-index-incidents">
@@ -227,12 +238,8 @@ statusmessage: "Indexering av " + environment.output.totalTicketCount + " ärend
       <bpmndi:BPMNShape id="Gateway_1ufq9hn_di" bpmnElement="moreIncidentsGateway" isMarkerVisible="true">
         <dc:Bounds x="895" y="145" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="881" y="213" width="78" height="14" />
+          <dc:Bounds x="881" y="202" width="78" height="14" />
         </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0cygy98_di" bpmnElement="getTOPdeskSettings">
-        <dc:Bounds x="240" y="130" width="100" height="80" />
-        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="index_di" bpmnElement="bulkIndexIncidents">
         <dc:Bounds x="730" y="130" width="100" height="80" />
@@ -249,14 +256,24 @@ statusmessage: "Indexering av " + environment.output.totalTicketCount + " ärend
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1e1etpl_di" bpmnElement="end" bioc:stroke="#e53935" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#e53935">
-        <dc:Bounds x="1222" y="152" width="36" height="36" />
+        <dc:Bounds x="1322" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1197" y="195" width="86" height="27" />
+          <dc:Bounds x="1297" y="195" width="86" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0o7v5ju" bpmnElement="purgeProducts">
-        <dc:Bounds x="1050" y="130" width="100" height="80" />
+        <dc:Bounds x="1150" y="130" width="100" height="80" />
         <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0u86dcn" bpmnElement="getTOPdeskSettings">
+        <dc:Bounds x="250" y="130" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1ef8w0a" bpmnElement="Event_0hr9feo">
+        <dc:Bounds x="1042" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1017" y="195" width="86" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0ww803f_di" bpmnElement="Flow_0ww803f">
         <di:waypoint x="920" y="145" />
@@ -269,15 +286,11 @@ statusmessage: "Indexering av " + environment.output.totalTicketCount + " ärend
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0ftost3_di" bpmnElement="Flow_0ftost3">
         <di:waypoint x="188" y="170" />
-        <di:waypoint x="240" y="170" />
+        <di:waypoint x="250" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0q79mkz_di" bpmnElement="Flow_0q79mkz">
         <di:waypoint x="670" y="170" />
         <di:waypoint x="730" y="170" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0765ccd_di" bpmnElement="Flow_0765ccd">
-        <di:waypoint x="340" y="170" />
-        <di:waypoint x="405" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_02ca05c_di" bpmnElement="Flow_02ca05c">
         <di:waypoint x="830" y="170" />
@@ -289,14 +302,22 @@ statusmessage: "Indexering av " + environment.output.totalTicketCount + " ärend
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0qdtbr4_di" bpmnElement="Flow_0qdtbr4">
         <di:waypoint x="945" y="170" />
-        <di:waypoint x="1050" y="170" />
+        <di:waypoint x="1042" y="170" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="980" y="152" width="15" height="14" />
+          <dc:Bounds x="967" y="155" width="15" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0sh0w0z_di" bpmnElement="Flow_0sh0w0z">
+        <di:waypoint x="1250" y="170" />
+        <di:waypoint x="1322" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1gv9lqq_di" bpmnElement="Flow_1gv9lqq">
+        <di:waypoint x="350" y="170" />
+        <di:waypoint x="405" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0p75x3h_di" bpmnElement="Flow_0p75x3h">
+        <di:waypoint x="1078" y="170" />
         <di:waypoint x="1150" y="170" />
-        <di:waypoint x="1222" y="170" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
