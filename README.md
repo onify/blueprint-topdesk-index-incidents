@@ -5,7 +5,7 @@
 
 # Onify Blueprint: Index incidents from TOPdesk
 
-[TOPdesk](https://www.topdesk.com/) TOPdesk is a leading case/ticket management system for customer communication, management of workflows and for asset management. TOPdesk has approximately 10 million active SAAS users worldwide. "Better support, happy customers"...
+[TOPdesk](https://www.topdesk.com/) is a leading case/ticket management system for customer communication, management of workflows and for asset management. TOPdesk has approximately 10 million active SAAS users worldwide. "Better support, happy customers"...
 
 In this Blueprint we index all incidents from TOPdesk using REST-API integration.
 
